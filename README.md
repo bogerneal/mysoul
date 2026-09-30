@@ -2,7 +2,7 @@
 
 以中央氣象署（CWA）開放資料建立可查詢縣市、日期與溫度趨勢的互動式天氣地圖，同時保留可教學、可測試、可維護的資料處理流程。
 
-**目前狀態：規畫階段。** 本儲存庫目前只有規畫文件，尚未實作資料串接、應用程式或部署；參考網站不是本專案的成果。
+**目前狀態：M1 離線基礎已實作。** 已提供 Python 專案、合成資料解析器、離線示範指令與自動測試。真實 CWA 串接、SQLite、Streamlit 介面及部署尚未實作；參考網站不是本專案的成果。
 
 ## 專案方向
 
@@ -40,7 +40,7 @@ MVP 不包含帳號、付費功能、氣象預測模型、自動通知或全部�
 | 驗證 | pytest、Ruff、GitHub Actions | 解析與資料一致性測試、程式品質檢查 |
 | 發布 | 先本機，後評估 Streamlit Community Cloud | 先完成可重現的 MVP，再部署示範 |
 
-版本與相依套件會在建立可執行骨架時驗證並鎖定。SQLite 隨 Python 提供，不另安裝同名套件。若後續需要接近參考網站的全螢幕圖層體驗，再評估 Next.js／Leaflet 前端與獨立 API。
+目前 Python 套件支援 3.12～3.14，以 `uv.lock` 鎖定開發依賴；離線解析器僅使用標準函式庫。Requests、Pandas、Streamlit 等會在對應階段加入。SQLite 隨 Python 提供，不另安裝同名套件。若後續需要接近參考網站的全螢幕圖層體驗，再評估 Next.js／Leaflet 前端與獨立 API。
 
 以下以 UML 類別圖表示主要模組依賴；模組可實作為 Python 函式或類別，不要求全部物件導向化。
 
@@ -87,7 +87,7 @@ classDiagram
 | 里程碑 | 交付內容 | 狀態 |
 | --- | --- | --- |
 | M0：規畫 | README、需求與驗收、架構與資料設計、UML、參考分析 | 已完成文件初稿 |
-| M1：資料契約 | 無 Key 的回應範例、欄位對照、解析器、離線測試 | 待開發 |
+| M1：資料契約 | Python 骨架、合成 fixture、暫定欄位對照、解析器、離線測試與 CI | 離線部分完成；真實 API 契約待驗證 |
 | M2：資料管線 | 擷取、SQLite migration、冪等匯入、失敗回復 | 待開發 |
 | M3：查詢介面 | 縣市／日期選單、摘要、折線圖、表格與狀態提示 | 待開發 |
 | M4：互動地圖 | 縣市代表點、圖例、點擊明細、手機與桌面驗收 | 待開發 |
@@ -100,15 +100,37 @@ classDiagram
 - [開發計畫與驗收標準](docs/PLAN.md)：需求編號、工作拆分、風險及完成定義。
 - [架構與資料設計](docs/ARCHITECTURE.md)：模組責任、資料契約、資料表、更新與部署策略。
 - [UML 系統架構](docs/UML.md)：模組依賴、領域類別、更新循序與資料狀態。
+- [M1 資料契約](docs/DATA_CONTRACT.md)：合成格式、驗證規則、官方欄位依據及真實 API 待辦。
 - [參考分析與設計決策](docs/REFERENCES.md)：網站及課程圖片的取捨與查核限制。
 
 ## 執行與協作
 
-目前沒有可執行程式或安裝指令。完成 M1／M2 後會補上經驗證的環境、安裝、資料初始化與啟動步驟；不得把規畫中的指令宣稱為已可執行。
+先安裝 Python 與 uv（本次使用 uv 0.12.21），在儲存庫根目錄執行：
 
-開發採小幅提交；功能開發使用分支與 PR，連結需求編號並說明驗證結果。CI 在程式骨架建立時加入，預設以離線 fixtures 執行，不依賴真實 API Key。
+```powershell
+python -m pip install uv==0.12.21
+uv sync --locked
+uv run --locked weather-demo
+```
 
-未來使用 `CWA_API_KEY` 環境變數或 Streamlit secrets。Key、`.env`、`.streamlit/secrets.toml`、SQLite 執行檔及未處理的 API 日誌不得提交至 Git；建立程式骨架時一併加入 `.gitignore`。部署密鑰方式依 [Streamlit 官方說明](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)。
+預設 Python 版本為 3.14；uv 會依需求取得相容的 Python。示範不需要 API Key，會輸出含 `DEMO / SYNTHETIC DATA` 標示的 JSON：兩個虛構縣市代碼、四筆預報時段、UTC 時間及缺值旗標。輸出保留 `mode=demo`，不是目前真實天氣。也可用 `uv run --locked python -m weather` 執行。
+
+驗證與建置：
+
+```powershell
+uv run --locked pytest
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv build
+```
+
+測試涵蓋時段亂序、跨年、時區、缺值、重複資料、schema 錯誤與 CLI 模式隔離。GitHub Actions 會在 push／PR 上檢查 Python 3.12、3.13、3.14；執行測試和示範不需要 CWA 網路或密鑰，首次安裝套件仍需網路。
+
+`.env.example` 是設定參考，程式不自動讀取 `.env`。目前預設 `WEATHER_MODE=demo`；設定成 `live` 時會明確拒絕執行，直到真實 adapter 完成，不會默默退回示範。自訂合成範例可用 `weather-demo --fixture <檔案路徑>`。
+
+開發採小幅提交；功能開發使用分支與 PR，連結需求編號並說明驗證結果。CI 已加入，預設以離線 fixtures 執行，不依賴真實 API Key。
+
+`Settings` 已支援 `CWA_API_KEY` 環境變數，並從物件文字表示中隱藏密鑰；目前不會使用它發送請求。`.gitignore` 已排除 `.env`、`.streamlit/secrets.toml`、SQLite 檔案及日誌。未來 Streamlit 部署密鑰方式依 [官方說明](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)。
 
 Streamlit Community Cloud 不保證本機檔案持久保存，因此示範部署的 SQLite 必須可重新建立；需要保存歷史資料時，改用持久磁碟或外部資料庫。參閱 [官方資料連線說明](https://docs.streamlit.io/develop/concepts/connections/connecting-to-data)。
 

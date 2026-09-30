@@ -42,18 +42,43 @@ MVP 不包含帳號、付費功能、氣象預測模型、自動通知或全部�
 
 版本與相依套件會在建立可執行骨架時驗證並鎖定。SQLite 隨 Python 提供，不另安裝同名套件。若後續需要接近參考網站的全螢幕圖層體驗，再評估 Next.js／Leaflet 前端與獨立 API。
 
+以下以 UML 類別圖表示主要模組依賴；模組可實作為 Python 函式或類別，不要求全部物件導向化。
+
 ```mermaid
-flowchart LR
-    CWA[中央氣象署 API] --> Fetch[擷取與驗證]
-    Demo[明確標示的離線範例] --> Parse[解析與正規化]
-    Fetch --> Parse
-    Parse --> DB[(SQLite 快照)]
-    DB --> Query[查詢與日期彙整]
-    Query --> UI[Streamlit]
-    UI --> Map[縣市地圖]
-    UI --> Chart[溫度折線圖]
-    UI --> Table[預報時段表格]
+classDiagram
+    direction LR
+    class WeatherUI {
+        <<boundary>>
+        篩選與地圖圖表
+    }
+    class ForecastService {
+        <<control>>
+        查詢彙整與更新協調
+    }
+    class CwaClient {
+        <<adapter>>
+        氣象署API存取
+    }
+    class ForecastParser {
+        <<service>>
+        資料解析與驗證
+    }
+    class ForecastRepository {
+        <<repository>>
+        SQLite快照與交易
+    }
+    class GeoCatalog {
+        <<service>>
+        縣市代表點對照
+    }
+    WeatherUI ..> ForecastService : 呼叫
+    ForecastService ..> CwaClient : 取得資料
+    ForecastService ..> ForecastParser : 驗證資料
+    ForecastService ..> ForecastRepository : 儲存與查詢
+    ForecastService ..> GeoCatalog : 取得座標
 ```
+
+完整的模組、資料模型、更新循序與狀態圖見 [UML 系統架構](docs/UML.md)。
 
 候選資料集為 `F-D0047-091`，中央氣象署文件列為「臺灣未來1週天氣預報」。實作前必須以實際回應驗證欄位、縣市涵蓋範圍、時間區間及單位，不直接將圖片中的示意 JSON 當成 API 契約。參閱 [CWA API 文件](https://opendata.cwa.gov.tw/dist/opendata-swagger.html)。
 
@@ -61,7 +86,7 @@ flowchart LR
 
 | 里程碑 | 交付內容 | 狀態 |
 | --- | --- | --- |
-| M0：規畫 | README、需求與驗收、架構與資料設計、參考分析 | 已完成文件初稿 |
+| M0：規畫 | README、需求與驗收、架構與資料設計、UML、參考分析 | 已完成文件初稿 |
 | M1：資料契約 | 無 Key 的回應範例、欄位對照、解析器、離線測試 | 待開發 |
 | M2：資料管線 | 擷取、SQLite migration、冪等匯入、失敗回復 | 待開發 |
 | M3：查詢介面 | 縣市／日期選單、摘要、折線圖、表格與狀態提示 | 待開發 |
@@ -74,6 +99,7 @@ flowchart LR
 
 - [開發計畫與驗收標準](docs/PLAN.md)：需求編號、工作拆分、風險及完成定義。
 - [架構與資料設計](docs/ARCHITECTURE.md)：模組責任、資料契約、資料表、更新與部署策略。
+- [UML 系統架構](docs/UML.md)：模組依賴、領域類別、更新循序與資料狀態。
 - [參考分析與設計決策](docs/REFERENCES.md)：網站及課程圖片的取捨與查核限制。
 
 ## 執行與協作

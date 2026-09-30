@@ -1,0 +1,59 @@
+{
+  "schema_version": "mysoul.synthetic-weekly.v1",
+  "synthetic": true,
+  "mode": "demo",
+  "dataset_id": "F-D0047-091",
+  "temperature_unit": "C",
+  "source_issued_at": null,
+  "payload": {
+    "records": {
+      "Locations": [
+        {
+          "LocationsName": "臺灣（合成資料）",
+          "Location": [
+            {
+              "LocationName": "臺北市",
+              "Geocode": "DEMO-TPE",
+              "WeatherElement": [
+                {
+                  "ElementName": "最低溫度",
+                  "Time": [
+                    {"StartTime": "2026-12-31T18:00:00+08:00", "EndTime": "2027-01-01T06:00:00+08:00", "ElementValue": [{"MinTemperature": "18"}]},
+                    {"StartTime": "2027-01-01T06:00:00+08:00", "EndTime": "2027-01-01T18:00:00+08:00", "ElementValue": [{"MinTemperature": "20"}]}
+                  ]
+                },
+                {
+                  "ElementName": "最高溫度",
+                  "Time": [
+                    {"StartTime": "2027-01-01T06:00:00+08:00", "EndTime": "2027-01-01T18:00:00+08:00", "ElementValue": [{"MaxTemperature": "26"}]},
+                    {"StartTime": "2026-12-31T18:00:00+08:00", "EndTime": "2027-01-01T06:00:00+08:00", "ElementValue": [{"MaxTemperature": "22"}]}
+                  ]
+                }
+              ]
+            },
+            {
+              "LocationName": "高雄市",
+              "Geocode": "DEMO-KHH",
+              "WeatherElement": [
+                {
+                  "ElementName": "最高溫度",
+                  "Time": [
+                    {"StartTime": "2026-12-31T18:00:00+08:00", "EndTime": "2027-01-01T06:00:00+08:00", "ElementValue": [{"MaxTemperature": "25"}]},
+                    {"StartTime": "2027-01-01T06:00:00+08:00", "EndTime": "2027-01-01T18:00:00+08:00", "ElementValue": [{"MaxTemperature": "29"}]}
+                  ]
+                },
+                {
+                  "ElementName": "最低溫度",
+                  "Time": [
+                    {"StartTime": "2026-12-31T18:00:00+08:00", "EndTime": "2027-01-01T06:00:00+08:00", "ElementValue": [{"MinTemperature": null}]},
+                    {"StartTime": "2027-01-01T06:00:00+08:00", "EndTime": "2027-01-01T18:00:00+08:00", "ElementValue": [{"MinTemperature": "23"}]}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

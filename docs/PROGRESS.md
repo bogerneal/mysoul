@@ -8,9 +8,9 @@
 
 本機目錄：`C:\Users\USER\Downloads\mysoul`
 
-本次開發分支：`feat/live-forecast-pipeline`；同步目標：`main`。
+目前分支：`main`；本次開發分支：`feat/live-forecast-pipeline`。
 
-同步紀錄：前一版已透過 [PR #2](https://github.com/bogerneal/mysoul/pull/2) 合併。本次交付將真實解析／更新／查詢、兩份精簡測試樣本及文件納入 GitHub 版本，透過 PR 檢查後同步至 `main`；合併與雲端驗證結果以 GitHub PR／Actions 為準。
+同步狀態：真實解析／更新／查詢、兩份精簡測試樣本、README 與操作文件已透過 [PR #3](https://github.com/bogerneal/mysoul/pull/3) 合併至 GitHub `main`。功能分支及 PR 的 Python 3.12～3.14 CI 均成功；本機同步追蹤 `origin/main`。
 
 ## 里程碑
 
@@ -121,3 +121,9 @@ uv run --locked weather-data capture-cwa --prompt-key
 ## 更新方式
 
 每次完成一段實作、取得驗證結果、發現阻礙或需要使用者額外設定時，同步更新本文件。需求驗收勾選維護於 [PLAN.md](PLAN.md)；此處記錄實際進度與證據。明確區分本機／遠端、離線／真實驗證，不以測試全通過代表產品全部完成。
+
+## 2026-10-04：真實資料查詢同步 GitHub
+
+- PR #3 已合併，GitHub `main` 顯示最新真實 CWA 查詢成果。
+- 本機 106 項測試、Ruff 與建置通過；[PR 雲端檢查](https://github.com/bogerneal/mysoul/actions/runs/37202726092) 成功。
+- API Key、私有原始樣本與 SQLite 未上傳；有來源記錄的精簡天氣測試樣本已納入版本控制。

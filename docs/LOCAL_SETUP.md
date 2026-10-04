@@ -45,7 +45,16 @@ uv run --locked weather-data capture-cwa --prompt-key
 
 HTTP client 使用連線 5 秒／讀取 20 秒逾時、最多 3 次請求、最多 30 秒重試等待；若伺服器要求更長等待，直接停止而不提前重試。Requests 的讀取逾時是等待資料的逾時，並非整次下載的硬性總秒數。
 
-HTTP client 使用 truststore 的系統憑證儲存區，保留憑證及主機名稱驗證。2026-10-04 已在本機成功擷取真實樣本（22 縣市）；樣本已存在 `data/private/`，不需要再次申請授權碼。真實 adapter 與資料契約驗收仍待完成。
+HTTP client 使用 truststore 的系統憑證儲存區，保留憑證及主機名稱驗證。2026-10-04 已在本機成功擷取真實樣本（22 縣市），並完成 live adapter；官方溫度缺值語意等完整契約仍待核對。
+
+**後續進度：已完成獨立 live adapter 與本機真實更新／查詢。** 上述 `capture-cwa` 保留作為原始樣本診斷工具，不會自行匯入資料庫；日常更新改用：
+
+```powershell
+uv run --locked weather-data update-live --prompt-key
+uv run --locked weather-data status --mode live --summary --location 臺北市
+```
+
+現有電腦已匯入真實資料，可直接執行第二行。新電腦須先更新或用 `import-cwa --file ... --fetched-at ...` 匯入有原始擷取時間的樣本。完整規則見 [LIVE_CONTRACT.md](LIVE_CONTRACT.md)。授權碼不持久保存，網頁介面尚未實作。
 
 ## 開發驗證
 

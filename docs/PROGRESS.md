@@ -8,9 +8,9 @@ M1 離線基礎完成，M2 離線資料管線已實作並通過本機驗證。�
 
 本機目錄：`C:\Users\USER\Downloads\mysoul`
 
-目前分支：`feat/m2-local-pipeline`
+目前分支：`main`
 
-同步分支：`origin/feat/m2-local-pipeline`；本次提交整理 M2 本機管線與設定文件，透過 PR 供審閱；`main` 合併狀態以 GitHub PR 為準。
+同步狀態：M2 程式與文件已透過 [PR #2](https://github.com/bogerneal/mysoul/pull/2) 合併至 GitHub `main`；本機同步追蹤 `origin/main`。
 
 ## 里程碑
 
@@ -47,7 +47,7 @@ M1 離線基礎完成，M2 離線資料管線已實作並通過本機驗證。�
 | SQLite 查詢 | 正確讀取四筆合成預報 |
 | Git 忽略規則 | 本機資料庫及私有樣本均被排除 |
 
-此階段的 API 測試使用 HTTP mock；後續真實擷取結果見下方紀錄。新增 CI 設定尚未推送，因此沒有本次變更的雲端 CI 結果。
+此階段的 API 測試使用 HTTP mock；後續真實擷取結果見下方紀錄。功能分支與 PR 的雲端 CI 已通過；main 合併後的執行結果以 GitHub Actions 為準。
 
 ### 2026-10-04：進度文件維護
 
@@ -71,6 +71,12 @@ M1 離線基礎完成，M2 離線資料管線已實作並通過本機驗證。�
 - 提交前檢查授權碼未出現在待提交檔案；私有樣本、SQLite、虛擬環境與建置產物不納入版本控制。
 - 真實資料仍只有樣本擷取完成，live adapter 與網站介面尚未完成。
 - 雲端 CI 結果以此次功能分支／PR 的 GitHub Actions 為準。
+
+### 2026-10-04：更新 GitHub 主分支
+
+- PR #2 已合併至 `main`，GitHub 首頁直接顯示目前 M2 開發成果。
+- 本機 82 項測試、Ruff 與套件建置通過，功能分支／PR CI 通過。
+- 私有樣本、API Key、SQLite 與虛擬環境未上傳；真實契約及 live adapter 仍待完成。
 
 ## 使用者需要做的事
 

@@ -19,7 +19,7 @@ class ForecastPeriod:
 @dataclass(frozen=True)
 class ForecastSnapshot:
     dataset_id: str
-    mode: Literal["demo"]
+    mode: Literal["demo", "live"]
     source_issued_at: datetime | None
     fetched_at: datetime
     periods: tuple[ForecastPeriod, ...]

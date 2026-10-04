@@ -24,4 +24,6 @@ jobs:
       - run: uv run --locked ruff format --check .
       - run: uv run --locked pytest
       - run: uv run --locked weather-demo
+      - run: uv run --locked weather-data update-demo
+      - run: uv run --locked weather-data status --mode demo
       - run: uv build

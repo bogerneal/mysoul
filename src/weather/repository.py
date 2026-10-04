@@ -150,6 +150,13 @@ class ForecastRepository:
                     not issued or issued < current["source_issued_at"]
                 ):
                     raise RepositoryError("older_source_rejected")
+                if mode == "live":
+                    previous_end = db.execute(
+                        "SELECT MAX(end_at) FROM forecast_periods WHERE batch_id=?",
+                        (current["id"],),
+                    ).fetchone()[0]
+                    if max(p["end_at"] for p in data["periods"]) < previous_end:
+                        raise RepositoryError("older_forecast_rejected")
             existing = db.execute(
                 "SELECT id FROM forecast_batches "
                 "WHERE dataset_id=? AND mode=? AND content_sha256=?",

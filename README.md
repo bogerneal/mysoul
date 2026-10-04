@@ -2,7 +2,7 @@
 
 以中央氣象署（CWA）開放資料建立可查詢縣市、日期與溫度趨勢的互動式天氣地圖，同時保留可教學、可測試、可維護的資料處理流程。
 
-**目前狀態：M1 離線基礎與 M2 本機資料管線已實作。** 已提供合成資料解析器、SQLite 快照／去重／失敗回復、離線更新查詢指令，以及具有限重試的 CWA HTTP client 與私有樣本擷取工具。真實 API 契約與 live adapter 尚待驗證；Streamlit 介面與部署尚未實作。設定步驟見 [本機開發與 CWA 設定](docs/LOCAL_SETUP.md)。
+**目前狀態：本機真實 CWA → SQLite → live 查詢已打通。** 已提供真實資料解析器、22 縣市覆蓋檢查、SQLite 快照／去重／失敗回復及中文台灣時間摘要，成功更新 330 筆預報。官方溫度缺值語意與更多發布批次仍待核對；Streamlit 介面與部署尚未實作。詳見 [真實資料查詢](docs/LIVE_CONTRACT.md) 與 [最新進度](docs/PROGRESS.md)。
 
 ## 專案方向
 
@@ -87,8 +87,8 @@ classDiagram
 | 里程碑 | 交付內容 | 狀態 |
 | --- | --- | --- |
 | M0：規畫 | README、需求與驗收、架構與資料設計、UML、參考分析 | 已完成文件初稿 |
-| M1：資料契約 | Python 骨架、合成 fixture、暫定欄位對照、解析器、離線測試與 CI | 離線部分完成；真實 API 契約待驗證 |
-| M2：資料管線 | 擷取、SQLite migration、冪等匯入、失敗回復 | 離線管線與 HTTP client 完成；真實整合、覆蓋檢查與 UI 更新政策待驗收 |
+| M1：資料契約 | 真實／合成 fixture、欄位對照、解析器與測試 | 兩個真實批次及 22 縣市已驗證；缺值語意與更多批次待核對 |
+| M2：資料管線 | 擷取、SQLite migration、冪等匯入、失敗回復 | 本機真實更新與查詢完成；更新冷卻、狀態與日誌整合待完成 |
 | M3：查詢介面 | 縣市／日期選單、摘要、折線圖、表格與狀態提示 | 待開發 |
 | M4：互動地圖 | 縣市代表點、圖例、點擊明細、手機與桌面驗收 | 待開發 |
 | M5：品質與發布 | CI、設定說明、部署驗證、操作文件 | 待開發 |
@@ -97,6 +97,7 @@ classDiagram
 
 ## 文件導覽
 
+- [真實資料契約與查詢](docs/LIVE_CONTRACT.md)：live 指令、台灣時間摘要、14／15 時段及缺值限制。
 - [最新開發進度](docs/PROGRESS.md)：已完成項目、驗證結果、待辦與使用者需要的設定。
 - [開發計畫與驗收標準](docs/PLAN.md)：需求編號、工作拆分、風險及完成定義。
 - [架構與資料設計](docs/ARCHITECTURE.md)：模組責任、資料契約、資料表、更新與部署策略。
@@ -127,11 +128,11 @@ uv build
 
 測試涵蓋時段亂序、跨年、時區、缺值、重複資料、schema 錯誤與 CLI 模式隔離。GitHub Actions 會在 push／PR 上檢查 Python 3.12、3.13、3.14；執行測試和示範不需要 CWA 網路或密鑰，首次安裝套件仍需網路。
 
-`.env.example` 是設定參考，程式不自動讀取 `.env`。目前預設 `WEATHER_MODE=demo`；設定成 `live` 時會明確拒絕執行，直到真實 adapter 完成，不會默默退回示範。自訂合成範例可用 `weather-demo --fixture <檔案路徑>`。
+`.env.example` 是設定參考，程式不自動讀取 `.env`。`weather-demo` 僅執行 Demo，設定 `WEATHER_MODE=live` 仍會拒絕；真實更新請明確執行 `weather-data update-live --prompt-key`，失敗不會退回示範。自訂合成範例可用 `weather-demo --fixture <檔案路徑>`。
 
 開發採小幅提交；功能開發使用分支與 PR，連結需求編號並說明驗證結果。CI 已加入，預設以離線 fixtures 執行，不依賴真實 API Key。
 
-`Settings` 已支援 `CWA_API_KEY` 環境變數，並從物件文字表示中隱藏密鑰；Demo 不會使用它發送請求，明確執行 `weather-data capture-cwa` 才會擷取樣本。`.gitignore` 已排除 `.env`、`.streamlit/secrets.toml`、SQLite、私有樣本及日誌。未來 Streamlit 部署密鑰方式依 [官方說明](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)。
+`Settings` 已支援 `CWA_API_KEY` 環境變數，並從物件文字表示中隱藏密鑰；Demo 不會使用它發送請求，明確執行 `weather-data capture-cwa` 或 `update-live` 才會連線。`.gitignore` 已排除 `.env`、`.streamlit/secrets.toml`、SQLite、私有原始樣本及日誌；精簡測試氣象資料保留來源並納入版本控制。未來 Streamlit 部署密鑰方式依 [官方說明](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)。
 
 Streamlit Community Cloud 不保證本機檔案持久保存，因此示範部署的 SQLite 必須可重新建立；需要保存歷史資料時，改用持久磁碟或外部資料庫。參閱 [官方資料連線說明](https://docs.streamlit.io/develop/concepts/connections/connecting-to-data)。
 
@@ -146,3 +147,17 @@ uv run --locked weather-data capture-cwa --prompt-key
 ```
 
 前兩個指令不需要 Key；第三個指令僅在申請 CWA 授權碼後執行，隱藏輸入且不保存 Key。詳見 [本機設定](docs/LOCAL_SETUP.md)。
+
+## 查看真實預報成果
+
+```powershell
+uv run --locked weather-data status --mode live --summary --location 臺北市
+```
+
+查詢讀取本機快照，不重新連線。可改成其他縣市，或省略 `--location` 查看全部。若要取得最新資料：
+
+```powershell
+uv run --locked weather-data update-live --prompt-key
+```
+
+新電腦須先更新或匯入樣本；SQLite 未隨 Git 同步。`--mode demo` 是固定跨年合成資料，不能用來看目前天氣。`--summary` 會標示模式、擷取／預報時間、過期狀態與溫度表格。

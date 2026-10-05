@@ -7,6 +7,37 @@ cd C:\Users\USER\Downloads\mysoul
 uv sync --locked
 ```
 
+## 開啟互動網頁
+
+```powershell
+uv run --locked streamlit run app.py --server.address 127.0.0.1
+```
+
+瀏覽 <http://localhost:8501>，或在套件安裝完成後雙擊 `start-dashboard.cmd`。
+左側選「Demo 示範」再按「載入示範資料」；真實模式可查看現有資料庫，不需重新輸入 Key。
+關閉終端會停止服務；下次重新執行即可，SQLite 內容會保留。預設不開放其他電腦連線。
+
+如果想先更新資料、再看網頁，另開 PowerShell 執行：
+
+```powershell
+uv run --locked weather-data update-live --prompt-key
+```
+
+若要使用網頁「更新真實天氣」按鈕，先在啟動網頁的同一個 PowerShell 執行下列安全輸入，
+再執行 `streamlit run` 指令（Key 不寫進命令歷史）：
+
+```powershell
+$cwaSecure = Read-Host 'CWA API Key' -AsSecureString
+$env:CWA_API_KEY = [System.Net.NetworkCredential]::new('', $cwaSecure).Password
+uv run --locked streamlit run app.py --server.address 127.0.0.1
+Remove-Item Env:CWA_API_KEY
+```
+
+也支援被 Git 忽略的 `.streamlit/secrets.toml` 內 `CWA_API_KEY` 設定。
+金鑰只在伺服器端讀取；沒有金鑰時更新按鈕停用。每個資料庫在同一程序內限制 60 秒一次更新，
+程式重啟會重置冷卻；多程序部署前需要外部協調。改縣市／日期不會呼叫 API。
+`WEATHER_DB` 可指定其他 SQLite 路徑；預設 `data/weather.sqlite3`，相對於啟動目錄。
+
 ## 不需要帳號的資料庫示範
 
 ```powershell

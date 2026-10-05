@@ -1,1 +1,1 @@
-"""Offline foundation for Taiwan weather forecasts; live integration is pending."""
+"""Taiwan county forecasts with separate live and synthetic data pipelines."""

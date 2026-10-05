@@ -1,9 +1,9 @@
 # 本機開發與 CWA 設定
 
-本機路徑：`C:\Users\USER\Downloads\mysoul`。使用 PowerShell，先切換到專案目錄：
+本機路徑：`C:\Users\user\Downloads\Fix\mysoul`。使用 PowerShell，先切換到專案目錄：
 
 ```powershell
-cd C:\Users\USER\Downloads\mysoul
+cd C:\Users\user\Downloads\Fix\mysoul
 uv sync --locked
 ```
 
@@ -59,7 +59,7 @@ uv run --locked weather-data status --mode demo
 uv run --locked weather-data capture-cwa --prompt-key
 ```
 
-授權碼只在這次程式記憶體中使用，不寫入腳本、命令歷史或設定檔。不要把它貼到聊天、GitHub 或測試檔。若已在執行程序環境中設定 `CWA_API_KEY`，可省略 `--prompt-key`；程式不自動載入 `.env`。
+授權碼只在這次程式記憶體中使用，不寫入腳本、命令歷史或設定檔。後續請透過本機隱藏輸入或雲端 Secrets 設定，不放入 GitHub 或測試檔。若已在執行程序環境中設定 `CWA_API_KEY`，可省略 `--prompt-key`；程式不自動載入 `.env`。
 
 成功會顯示 `captured_unverified`，回應儲存在 `data/private/cwa-<UTC時間>.json`，此資料夾已被 Git 排除。這是待檢查的原始樣本，不會匯入 live 資料庫。取得樣本後告知開發者「已擷取」，即可在本機核對 schema、縣市、缺值與時段覆蓋，再實作 live adapter。未知格式不會自動猜測或切換成 Demo。
 
@@ -85,7 +85,7 @@ uv run --locked weather-data update-live --prompt-key
 uv run --locked weather-data status --mode live --summary --location 臺北市
 ```
 
-現有電腦已匯入真實資料，可直接執行第二行。新電腦須先更新或用 `import-cwa --file ... --fetched-at ...` 匯入有原始擷取時間的樣本。完整規則見 [LIVE_CONTRACT.md](LIVE_CONTRACT.md)。授權碼不持久保存，網頁介面尚未實作。
+現有電腦已匯入真實資料，可直接執行第二行。新電腦須先更新或用 `import-cwa --file ... --fetched-at ...` 匯入有原始擷取時間的樣本。完整規則見 [LIVE_CONTRACT.md](LIVE_CONTRACT.md)。授權碼不持久保存；網頁介面已完成，見本文件開頭。
 
 ## 開發驗證
 
@@ -96,6 +96,6 @@ uv run --locked ruff format --check .
 uv build
 ```
 
-測試使用合成資料與 HTTP mock，不會呼叫真實 CWA 或需要 Key。目前尚無 Streamlit 頁面，無需設定網站服務、雲端帳號或外部資料庫。
+測試使用合成資料與 HTTP mock，不會呼叫真實 CWA 或需要 Key。Streamlit 本機介面已可使用；公開部署設定見 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 依據：[CWA API 說明](https://opendata.cwa.gov.tw/dist/opendata-swagger.html)、[Requests 逾時與錯誤說明](https://requests.readthedocs.io/en/latest/user/quickstart/#timeouts)。

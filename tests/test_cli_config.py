@@ -42,7 +42,7 @@ def test_live_mode_cannot_silently_fall_back_to_demo(monkeypatch, capsys):
     assert main([]) == 2
     output = capsys.readouterr()
     assert output.out == ""
-    assert "not implemented" in output.err
+    assert "weather-data update-live" in output.err
     assert "sensitive-test-value" not in output.err
 
 

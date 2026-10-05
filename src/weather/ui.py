@@ -3,7 +3,6 @@
 import json
 import os
 from datetime import UTC, datetime
-from importlib.resources import files
 from pathlib import Path
 from urllib.parse import quote
 
@@ -14,24 +13,30 @@ import streamlit as st
 
 from weather.dashboard import available_dates, summarize
 from weather.demo import load_demo_document
-from weather.forecast_service import update_demo, update_live
+from weather.forecast_service import refresh_if_due, update_demo, update_live
+from weather.geo import load_points, map_rows
 from weather.parser import DATASET_ID
 from weather.presentation import TAIPEI, local_time, temperature
 from weather.repository import ForecastRepository
+from weather.update_log import configure_update_logging
 
 
 def current_time():
     return datetime.now(UTC)
 
 
-def api_key():
-    key = os.environ.get("CWA_API_KEY", "").strip()
-    if key:
-        return key
+def setting(name, default=""):
+    value = os.environ.get(name)
+    if value is not None:
+        return value.strip()
     try:
-        return str(st.secrets.get("CWA_API_KEY", "")).strip()
+        return str(st.secrets.get(name, default)).strip()
     except (FileNotFoundError, st.errors.StreamlitSecretNotFoundError):
-        return ""
+        return default
+
+
+def api_key():
+    return setting("CWA_API_KEY")
 
 
 def select_map_city(key, codes):
@@ -42,43 +47,34 @@ def select_map_city(key, codes):
 
 
 def draw_map(snapshot, day, cities):
-    points = json.loads(
-        files("weather").joinpath("fixtures/cwa_county_points_v1.json").read_text("utf-8")
-    )
-    by_name = {p["name"]: p for p in points}
-    rows = []
-    for code, name in cities.items():
-        summary = summarize(snapshot, code, day)
-        if name not in by_name or not summary.periods:
-            continue
-        high = summary.high
-        color = (
-            [148, 163, 184]
-            if high is None
-            else [239, 108, 74]
-            if high >= 30
-            else [234, 179, 8]
-            if high >= 25
-            else [14, 165, 164]
-            if high >= 20
-            else [59, 130, 246]
-        )
-        rows.append(
-            {
-                **by_name[name],
-                "code": code,
-                "color": color,
-                "low": temperature(summary.low),
-                "high": temperature(high),
-                "coverage": "部分時段" if summary.partial else "全天涵蓋",
-            }
-        )
+    rows, table, missing = map_rows(snapshot, day, cities, load_points())
     st.subheader("同一天，各地溫度（°C）")
     st.caption("點選代表點切換縣市。藍 <20°C · 綠 20–<25°C · 黃 25–<30°C · 紅 ≥30°C · 灰 缺值")
+    if missing:
+        st.warning("缺少有效座標：" + "、".join(missing) + "；預報仍保留在縣市選單與表格。")
     basemap = st.checkbox("顯示網路底圖", value=True)
     if not rows:
         st.info("此日期沒有可顯示的地圖座標，請使用下方表格。")
-        return
+    else:
+        try:
+            render_map(snapshot, day, cities, rows, basemap)
+        except Exception:
+            st.warning("地圖暫時無法顯示，請使用縣市選單及下方表格查詢。")
+    st.caption("座標：CWA 縣市預報代表點，非測站。底圖無法載入時，可關閉底圖並使用縣市選單與表格。")
+    st.caption("資料：中央氣象署 · 底圖：CARTO / © OpenStreetMap contributors")
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {"縣市": r["name"], "最低溫": r["low"], "最高溫": r["high"], "涵蓋": r["coverage"]}
+                for r in table
+            ]
+        ),
+        hide_index=True,
+        width="stretch",
+    )
+
+
+def render_map(snapshot, day, cities, rows, basemap):
     deck = pdk.Deck(
         layers=[
             pdk.Layer(
@@ -115,20 +111,10 @@ def draw_map(snapshot, day, cities):
         selection_mode="single-object",
         on_select=lambda: select_map_city(key, cities),
     )
-    st.caption("座標：CWA 縣市預報代表點，非測站。底圖無法載入時，可關閉底圖並使用縣市選單與表格。")
-    st.dataframe(
-        pd.DataFrame(
-            [
-                {"縣市": r["name"], "最低溫": r["low"], "最高溫": r["high"], "涵蓋": r["coverage"]}
-                for r in rows
-            ]
-        ),
-        hide_index=True,
-        width="stretch",
-    )
 
 
 def main():
+    configure_update_logging()
     st.set_page_config(page_title="台灣一週天氣 · mysoul", page_icon="🌤️", layout="wide")
     st.title("台灣一週天氣")
     st.caption("選一座城市，看看接下來的溫度。｜中央氣象署縣市預報")
@@ -138,6 +124,13 @@ def main():
         mode_label = st.radio("資料模式", ["真實天氣", "Demo 示範"], key="mode")
         mode = "live" if mode_label == "真實天氣" else "demo"
         key = api_key() if mode == "live" else ""
+        automatic = setting("WEATHER_AUTO_REFRESH", "false").lower() == "true"
+        if key and automatic:
+            try:
+                with st.spinner("正在檢查預報更新…"):
+                    refresh_if_due(repository, key, now=current_time())
+            except Exception:
+                st.warning("自動更新未成功，保留最後成功資料；稍後會再次嘗試。")
         if mode == "live" and not key:
             st.info("可查看本機已有資料。更新天氣需設定 CWA_API_KEY，詳見 docs/LOCAL_SETUP.md。")
         if st.button(
@@ -156,7 +149,11 @@ def main():
                 st.error(
                     "未能更新：請確認金鑰、網路，或稍後再試（更新間隔至少 60 秒）。原資料仍保留。"
                 )
-        st.caption("篩選與切換圖表不會重新呼叫 API。")
+        st.caption(
+            "自動更新：開啟或操作頁面時每 30 分鐘檢查一次；其餘時間使用已保存資料。"
+            if automatic and mode == "live"
+            else "篩選與切換圖表不會重新呼叫 API。"
+        )
     now = current_time()
     stored = repository.read(DATASET_ID, mode, now=now)
     snapshot = stored.snapshot

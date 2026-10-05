@@ -1,6 +1,6 @@
 # 參考分析與設計決策
 
-本文件記錄規畫的證據與假設，供實作時追蹤。M1 已建立離線基礎；真實串接與應用介面仍未開發。
+本文件保留初期規畫的證據與假設，以下「本次」描述原始規畫時點。2026-10-06 現況：真實串接與應用介面已完成；後續實際網站操作見 REFERENCE_COMPARISON.md，最新實作與限制見 PROGRESS.md。
 
 ## 1. 使用者指定網站
 
@@ -47,7 +47,7 @@ HTML 顯示全螢幕地圖容器與桌面側邊控制面板，並含 Next.js 靜
 
 ## 4. 官方資料與待查核事項
 
-M1 新增查核：[CWA 精緻化天氣預報產品文件](https://opendata.cwa.gov.tw/opendatadoc/Forecast/F-D0047-001_093.pdf) 已核對標籤層級與最高／最低溫欄位。API 的實際 JSON 尚未取得，差異與合成假設另記於 [M1 資料契約](DATA_CONTRACT.md)。
+M1 新增查核：[CWA 精緻化天氣預報產品文件](https://opendata.cwa.gov.tw/opendatadoc/Forecast/F-D0047-001_093.pdf) 已核對標籤層級與最高／最低溫欄位。初期尚未取得 API JSON；後續已核對三份真實樣本，見 LIVE_CONTRACT.md。合成假設另記於 [M1 資料契約](DATA_CONTRACT.md)。
 
 - [CWA API 文件](https://opendata.cwa.gov.tw/dist/opendata-swagger.html)：可查到 `F-D0047-091` 為臺灣未來一週預報；本次未使用 API Key 取得實際 payload，因此欄位映射、發布時間、缺值代碼、頻率與限制尚待 M1 驗證。
 - [CWA 開放資料平台](https://opendata.cwa.gov.tw/)：M1 應確認帳號／授權碼、資料使用條款與資料來源標示要求。

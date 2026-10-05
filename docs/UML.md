@@ -1,6 +1,6 @@
 # UML 系統架構規畫
 
-本文件是「縣市一週預報 MVP」的目標設計。目前已實作 M1 的設定、合成 fixture、解析器與部分資料模型；完整更新流程及介面仍未實作。圖以 Mermaid 表達 UML 類別、循序及狀態模型；名稱是規畫中的責任邊界，方法簽章可在實作時調整。既有需求見 [開發計畫](PLAN.md)，欄位與時間規則見 [架構設計](ARCHITECTURE.md)。
+本文件是「縣市一週預報 MVP」的目標設計。目前已實作真實／合成解析器、SQLite、更新流程、JSON 日誌與 Streamlit 介面；圖中類別名稱仍表示責任邊界，實際函式以 src/weather 為準。圖以 Mermaid 表達 UML 類別、循序及狀態模型；名稱是規畫中的責任邊界，方法簽章可在實作時調整。既有需求見 [開發計畫](PLAN.md)，欄位與時間規則見 [架構設計](ARCHITECTURE.md)。
 
 閱讀順序：先看使用情境與模組關係，再看資料模型，最後看更新與失敗處理。
 
@@ -82,7 +82,7 @@ classDiagram
     ForecastRepository ..> SQLite : 參數化 SQL 與交易
 ```
 
-`WeatherUI` 包含 Streamlit 篩選、Folium 地圖、折線圖與表格；它接收同一批次的查詢結果，不自行解析 JSON。`ForecastService` 協調更新與查詢，持有單一更新鎖；一般篩選只查快照，不重新擷取。Demo 來源僅在使用者明確選取時使用。
+`WeatherUI` 包含 Streamlit 篩選、Pydeck 地圖、折線圖與表格；它接收同一批次的查詢結果，不自行解析 JSON。`ForecastService` 協調更新與查詢，持有單一更新鎖；一般篩選只查快照，不重新擷取。Demo 來源僅在使用者明確選取時使用。
 
 ## 3. 資料結構：領域類別圖
 

@@ -16,7 +16,7 @@
 | `geo` | 縣市代碼、名稱與代表點對照 | 將代表點誤標為測站 |
 | `ui` | 篩選、摘要、圖表、表格、地圖 | 自行解析 CWA JSON |
 
-目標目錄如下，包含尚未建立的 API、資料庫與 UI 模組；目前實作另有 `models.py`、`demo.py`、`__main__.py` 及打包用合成 fixture：
+以下保留目標目錄示意；實際以 ui.py、geo.py、repository.py（內含 migration）實作，沒有獨立 migrations 目錄。目前實作另有 `models.py`、`demo.py`、`__main__.py` 及打包用合成 fixture：
 
 ```text
 mysoul/
@@ -102,7 +102,7 @@ MinT 與 MaxT 依 `(location_code, start_at, end_at)` 對齊。預期欄位缺�
 
 更新檢查間隔暫定 30 分鐘，超過 6 小時未成功確認資料則提示可能過期；這是產品初值，不是 CWA 發布頻率或承諾，M1 查核後調整。即使最近檢查成功，若全部預報有效時間已過也必須標記過期。
 
-MVP 在頁面使用時按到期條件更新，並提供受冷卻時間限制的手動更新；沒有訪客時不承諾背景更新。固定排程是部署階段的獨立決策。
+設定 WEATHER_AUTO_REFRESH=true 後，MVP 在頁面使用時每 30 分鐘檢查更新，並提供受 60 秒冷卻限制的手動更新；沒有訪客時不承諾背景更新。固定排程是部署階段的獨立決策。
 
 ## 6. 介面規畫
 
@@ -127,7 +127,7 @@ CWA Key 由環境變數或 Streamlit secrets 提供；若 API 將授權放在 qu
 - schema 版本使用 SQLite `PRAGMA user_version=1`；未知未來版本拒絕開啟，初始化具交易保護。
 - `forecast_periods` 暫時直接保存不可變的縣市代碼／名稱；含座標的 `locations` 目錄於真實縣市契約與 M4 再加入，避免不同快照的名稱被覆寫。
 - 所有批次資料先驗證，再於 `BEGIN IMMEDIATE` 交易內寫入、切換與保留兩個快照；讀取同一交易固定批次。
-- 更新鎖目前適用單一 Python 程序，SQLite 另序列化寫入；時間檢查拒絕倒退。UI 的全流程更新鎖、冷卻與計時日誌仍待整合。
+- 更新鎖目前適用單一 Python 程序，SQLite 另序列化寫入；時間檢查拒絕倒退。UI 全流程更新鎖、冷卻與 JSON 計時日誌已整合；僅適用單一程序。
 - `capture-cwa` 只存 Git 忽略的私有待驗證樣本，不建立 live 快照。沒有 Key 時的測試為 HTTP mock，不能替代真實契約驗收。
 
 ## 9. 真實更新與樣本匯入

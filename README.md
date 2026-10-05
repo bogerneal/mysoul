@@ -2,7 +2,25 @@
 
 以中央氣象署（CWA）開放資料建立可查詢縣市、日期與溫度趨勢的互動式天氣地圖，同時保留可教學、可測試、可維護的資料處理流程。
 
-**目前狀態：本機真實 CWA → SQLite → live 查詢已打通。** 已提供真實資料解析器、22 縣市覆蓋檢查、SQLite 快照／去重／失敗回復及中文台灣時間摘要，成功更新 330 筆預報。官方溫度缺值語意與更多發布批次仍待核對；Streamlit 介面與部署尚未實作。詳見 [真實資料查詢](docs/LIVE_CONTRACT.md) 與 [最新進度](docs/PROGRESS.md)。
+**目前狀態：本機 CWA → SQLite → Streamlit 查詢介面已接通。** 可選縣市／日期，查看最低最高溫、七日趨勢、預報時段及互動地圖；具真實／Demo 模式、過期提示與更新失敗保留。官方溫度缺值語意與更多發布批次仍待核對，尚未部署公開網站。詳見 [最新進度](docs/PROGRESS.md)。
+
+## 立即查看成果
+
+在專案目錄執行：
+
+```powershell
+uv sync --locked
+uv run --locked streamlit run app.py --server.address 127.0.0.1
+```
+
+開啟 <http://localhost:8501>。Windows 安裝套件後亦可雙擊 `start-dashboard.cmd`。
+首次沒有資料時，左側選「Demo 示範」→「載入示範資料」即可操作，不需 Key。
+Demo 固定日期 2026/12/31–2027/01/01，是合成範例；真實模式只讀取 live 資料。
+手機窄螢幕使用左上角箭頭展開查詢選單。頁面只限本機，尚未公開部署。
+
+要更新真實天氣，請依 [本機設定](docs/LOCAL_SETUP.md) 設定伺服器端金鑰，或先用
+`uv run --locked weather-data update-live --prompt-key` 更新資料庫後重新整理頁面。
+地圖底圖需要網路；關閉底圖仍可使用代表點、選單與表格。
 
 ## 專案方向
 
@@ -36,11 +54,11 @@ MVP 不包含帳號、付費功能、氣象預測模型、自動通知或全部�
 | 資料擷取 | Python、Requests | 有逾時與重試策略的 CWA API 存取 |
 | 資料處理 | Python、Pandas | 驗證、欄位對應、時段對齊與查詢結果整理 |
 | 儲存 | SQLite | 本機與單一執行個體的預報快照 |
-| 介面 | Streamlit、Folium、streamlit-folium | 篩選、折線圖、表格、互動地圖 |
+| 介面 | Streamlit、Altair、Pydeck | 篩選、折線圖、表格、互動地圖 |
 | 驗證 | pytest、Ruff、GitHub Actions | 解析與資料一致性測試、程式品質檢查 |
 | 發布 | 先本機，後評估 Streamlit Community Cloud | 先完成可重現的 MVP，再部署示範 |
 
-目前 Python 套件支援 3.12～3.14，以 `uv.lock` 鎖定依賴；離線解析器僅使用標準函式庫。Requests 已用於 CWA 樣本擷取；Pandas、Streamlit 等會在對應階段加入。SQLite 隨 Python 提供，不另安裝同名套件。若後續需要接近參考網站的全螢幕圖層體驗，再評估 Next.js／Leaflet 前端與獨立 API。
+目前 Python 套件支援 3.12～3.14，以 `uv.lock` 鎖定依賴；離線解析器僅使用標準函式庫。Requests 用於 CWA 擷取，Pandas、Streamlit、Altair 與 Pydeck 已加入。SQLite 隨 Python 提供。地圖採內建 Pydeck 選取事件，座標來源見 [代表點說明](docs/MAP_SOURCE.md)。
 
 以下以 UML 類別圖表示主要模組依賴；模組可實作為 Python 函式或類別，不要求全部物件導向化。
 
@@ -88,9 +106,9 @@ classDiagram
 | --- | --- | --- |
 | M0：規畫 | README、需求與驗收、架構與資料設計、UML、參考分析 | 已完成文件初稿 |
 | M1：資料契約 | 真實／合成 fixture、欄位對照、解析器與測試 | 兩個真實批次及 22 縣市已驗證；缺值語意與更多批次待核對 |
-| M2：資料管線 | 擷取、SQLite migration、冪等匯入、失敗回復 | 本機真實更新與查詢完成；更新冷卻、狀態與日誌整合待完成 |
-| M3：查詢介面 | 縣市／日期選單、摘要、折線圖、表格與狀態提示 | 待開發 |
-| M4：互動地圖 | 縣市代表點、圖例、點擊明細、手機與桌面驗收 | 待開發 |
+| M2：資料管線 | 擷取、SQLite migration、冪等匯入、失敗回復 | 真實更新／查詢、網頁冷卻與狀態完成；批次日誌待整合 |
+| M3：查詢介面 | 縣市／日期選單、摘要、折線圖、表格與狀態提示 | 已實作與測試 |
+| M4：互動地圖 | 縣市代表點、圖例、點擊明細、手機與桌面驗收 | 基本互動已實作；完整驗收持續補齊 |
 | M5：品質與發布 | CI、設定說明、部署驗證、操作文件 | 待開發 |
 
 各階段以驗收通過為完成依據，不以檔案建立或畫面出現取代驗收。完整任務與依賴見 [開發計畫](docs/PLAN.md)。

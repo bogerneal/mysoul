@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from threading import Lock
+from time import monotonic
 
 from weather.cwa_client import fetch_weekly
 from weather.live_parser import parse_live_forecast
@@ -9,6 +10,7 @@ from weather.parser import DATASET_ID, ContractError, parse_demo_forecast
 from weather.repository import ForecastRepository
 
 _update_lock = Lock()
+_last_attempt: dict[str, float] = {}
 
 
 def update_demo(repository: ForecastRepository, document: object, *, now=None) -> int:
@@ -33,8 +35,21 @@ def import_live(repository: ForecastRepository, document: object, *, fetched_at:
             raise
 
 
-def update_live(repository: ForecastRepository, api_key: str) -> int:
+def update_live(
+    repository: ForecastRepository,
+    api_key: str,
+    *,
+    cooldown_seconds: float = 0,
+) -> int:
     with _update_lock:
+        database = str(repository.path.resolve())
+        attempt = monotonic()
+        if (
+            cooldown_seconds
+            and attempt - _last_attempt.get(database, -float("inf")) < cooldown_seconds
+        ):
+            raise ContractError("update_cooldown")
+        _last_attempt[database] = attempt
         try:
             document = fetch_weekly(api_key)
             now = datetime.now(UTC)

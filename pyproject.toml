@@ -9,7 +9,11 @@ description = "Taiwan weather forecast: offline data contract foundation"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 dependencies = [
+    "altair>=5,<7",
+    "pandas>=2.2,<4",
+    "pydeck>=0.9,<1",
     "requests>=2.32,<3",
+    "streamlit>=1.50,<2",
     "truststore>=0.10,<1",
 ]
 

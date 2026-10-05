@@ -1,6 +1,6 @@
 # 架構與資料設計
 
-本文件描述目標架構。目前已有真實／離線解析器、SQLite repository、更新服務、HTTP client 與資料查詢指令；UI 與地圖仍待實作。已核對兩份真實 CWA 樣本，官方溫度缺值語意仍待確認，詳見 [真實資料契約](LIVE_CONTRACT.md)。
+本文件描述目標架構。目前已有真實／離線解析器、SQLite repository、更新服務、HTTP client、CLI 與 Streamlit 查詢地圖。`dashboard.py` 提供台灣日期彙整，`ui.py` 使用單次讀取的快照產生所有圖表，地圖採內建 Pydeck 選取事件。已核對兩份真實 CWA 樣本，官方溫度缺值語意仍待確認，詳見 [真實資料契約](LIVE_CONTRACT.md)。
 
 搭配 [UML 系統架構](UML.md) 閱讀：該文件以類別圖、循序圖與狀態圖呈現本設計；本文件保留欄位、交易與部署規則。
 

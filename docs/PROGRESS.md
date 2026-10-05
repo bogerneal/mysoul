@@ -11,7 +11,7 @@
 - 本機 116 項 pytest 通過，Ruff lint／format、sdist／wheel 建置通過。
 - Edge 瀏覽器實測：1440px 桌面與 390px 手機寬度、22 縣市資料、地圖底圖、點選金門連動側欄成功，沒有頁面例外或整體水平溢出。截圖留在被 Git 忽略的 `data/private/`。
 - 修正關閉底圖時 Streamlit 自動套用預設底圖的情況，改用明確空白樣式。
-- 目前分支 `feat/weather-dashboard`；準備同步 GitHub，遠端 CI／合併結果尚待確認。
+- 網頁功能已透過 [PR #4](https://github.com/bogerneal/mysoul/pull/4) 合併至 GitHub `main`；[Python 3.12～3.14 雲端 CI](https://github.com/bogerneal/mysoul/actions/runs/37297095077) 全數通過。
 - 使用者設定：查看現有資料／Demo 不需 API Key；手動更新真實天氣需伺服器端 `CWA_API_KEY`。
 - 新增 `start-dashboard.cmd`；README、PLAN 與 LOCAL_SETUP 已更新。預覽為 `http://localhost:8501`。
 - 本次沒有重新請求 CWA；畫面讀取既有 batch 3 並標示過期，不將本機 UI 驗證冒充即時 API 更新。
@@ -22,9 +22,9 @@
 
 本機目錄：`C:\Users\USER\Downloads\mysoul`
 
-目前分支：`feat/weather-dashboard`。
+目前分支：`main`；本次功能分支：`feat/weather-dashboard`。
 
-同步狀態：先前真實管線已透過 [PR #3](https://github.com/bogerneal/mysoul/pull/3) 合併至 GitHub `main`；本次網頁介面正在準備同步。
+同步狀態：真實管線（PR #3）與本次 Streamlit 網頁（PR #4）均已合併至 GitHub `main`。本機同步追蹤 `origin/main`；API Key、SQLite、私有原始樣本及瀏覽器截圖維持 Git 忽略。
 
 ## 里程碑
 

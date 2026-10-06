@@ -6,6 +6,8 @@
 
 ## 立即查看成果
 
+新增「即時觀測」：CWA 測站氣溫、當日累積雨量、風速風向、濕度圖層，包含全台統計卡、測站明細、深色／街道底圖、縣市界線與數字標籤。使用頁首切換，與未來預報分開。沿用現有 API Key，操作及資料定義見 [即時觀測說明](docs/OBSERVATIONS.md)。
+
 公開網站：[台灣一週天氣 · mysoul](https://mysoul-9hyuk7z9oawbtdzjx2u3s4.streamlit.app/)。訪客不需輸入 API Key。
 
 若要在本機執行，在專案目錄輸入：

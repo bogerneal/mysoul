@@ -1,10 +1,8 @@
 """Local Streamlit dashboard. All visualizations use one immutable snapshot."""
 
-import json
 import os
 from datetime import UTC, datetime
 from pathlib import Path
-from urllib.parse import quote
 
 import altair as alt
 import pandas as pd
@@ -15,6 +13,7 @@ from weather.dashboard import available_dates, summarize
 from weather.demo import load_demo_document
 from weather.forecast_service import refresh_if_due, update_demo, update_live
 from weather.geo import load_points, map_rows
+from weather.map_layers import attribution, border_layer, label_layer, map_controls, map_style
 from weather.parser import DATASET_ID
 from weather.presentation import TAIPEI, local_time, temperature
 from weather.repository import ForecastRepository
@@ -52,7 +51,7 @@ def draw_map(snapshot, day, cities):
     st.caption("點選代表點切換縣市。藍 <20°C · 綠 20–<25°C · 黃 25–<30°C · 紅 ≥30°C · 灰 缺值")
     if missing:
         st.warning("缺少有效座標：" + "、".join(missing) + "；預報仍保留在縣市選單與表格。")
-    basemap = st.checkbox("顯示網路底圖", value=True)
+    basemap = map_controls("forecast")
     if not rows:
         st.info("此日期沒有可顯示的地圖座標，請使用下方表格。")
     else:
@@ -61,7 +60,7 @@ def draw_map(snapshot, day, cities):
         except Exception:
             st.warning("地圖暫時無法顯示，請使用縣市選單及下方表格查詢。")
     st.caption("座標：CWA 縣市預報代表點，非測站。底圖無法載入時，可關閉底圖並使用縣市選單與表格。")
-    st.caption("資料：中央氣象署 · 底圖：CARTO / © OpenStreetMap contributors")
+    attribution()
     st.dataframe(
         pd.DataFrame(
             [
@@ -75,6 +74,8 @@ def draw_map(snapshot, day, cities):
 
 
 def render_map(snapshot, day, cities, rows, basemap):
+    enabled, theme, borders, labels = basemap
+    rows = [{**r, "label": r["high"] + "°"} for r in rows]
     deck = pdk.Deck(
         layers=[
             pdk.Layer(
@@ -94,15 +95,13 @@ def render_map(snapshot, day, cities, rows, basemap):
         ],
         initial_view_state=pdk.ViewState(latitude=23.8, longitude=120.5, zoom=5.5),
         map_provider="carto",
-        map_style="light",
+        map_style=map_style(enabled, theme),
         tooltip={"text": "{name}\n最低 {low} / 最高 {high}\n{coverage}"},
     )
-    if not basemap:
-        # None asks Streamlit for its themed default; an empty style needs no tiles/key.
-        # Streamlit's frontend expects a style URL rather than Pydeck's dict form.
-        deck.map_style = "data:application/json," + quote(
-            json.dumps({"version": 8, "sources": {}, "layers": []})
-        )
+    if borders:
+        deck.layers.insert(0, border_layer())
+    if labels:
+        deck.layers.append(label_layer(rows))
     key = f"map_{snapshot.mode}_{snapshot.fetched_at.isoformat()}_{day}_{basemap}"
     st.pydeck_chart(
         deck,
@@ -115,7 +114,19 @@ def render_map(snapshot, day, cities, rows, basemap):
 
 def main():
     configure_update_logging()
-    st.set_page_config(page_title="台灣一週天氣 · mysoul", page_icon="🌤️", layout="wide")
+    st.set_page_config(page_title="台灣氣象 · mysoul", page_icon="🌤️", layout="wide")
+    section = st.segmented_control(
+        "功能", ["未來預報", "即時觀測"], default="未來預報", key="section"
+    )
+    if section == "即時觀測":
+        from weather.observation_ui import observation_page
+
+        observation_page(api_key(), setting("WEATHER_AUTO_REFRESH", "false").lower() == "true")
+        return
+    forecast_page()
+
+
+def forecast_page():
     st.title("台灣一週天氣")
     st.caption("選一座城市，看看接下來的溫度。｜中央氣象署縣市預報")
     repository = ForecastRepository(Path(os.environ.get("WEATHER_DB", "data/weather.sqlite3")))

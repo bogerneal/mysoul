@@ -6,6 +6,8 @@
 
 ## 部署設定
 
+新增即時觀測沿用 `CWA_API_KEY` 與 `WEATHER_AUTO_REFRESH`，不需新增 Secrets。観測模式每 10 分鐘由訪客觸發更新，另存 `data/weather_observations.sqlite3`；預報維持 30 分鐘。首次切換即時觀測會建立並擷取資料。詳見 [即時觀測說明](OBSERVATIONS.md)。
+
 1. 登入 <https://share.streamlit.io/>，連接具有 `bogerneal/mysoul` 存取權的 GitHub 帳號。
 2. 建立 app：Repository `bogerneal/mysoul`、Branch `feat/weather-reliability`、入口 `app.py`。
    功能分支通過 CI 並合併後，可將部署分支改為 `main`。
@@ -58,6 +60,5 @@ WEATHER_AUTO_REFRESH = "true"
 
 ## 已知限制
 
-底圖為 CARTO vector 樣式，需網路與 WebGL；提供者服務規則可能調整。頁面保留 CARTO／
-OpenStreetMap 來源標示。地圖顯示縣市預報代表點，並非測站或全台連續溫度場。
+底圖改為 OpenStreetMap raster，需網路與 WebGL；提供者服務規則可能調整，頁面保留 OpenStreetMap 來源標示。預報地圖為縣市代表點、觀測地圖為真實測站；皆非全台連續溫度場。
 官方溫度缺值規則與實體觸控裝置驗收尚待補齊；模擬手機測試不等同實機驗收。

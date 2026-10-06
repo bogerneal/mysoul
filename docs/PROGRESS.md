@@ -13,6 +13,8 @@
 - Edge 154／Intel Core i5-12400：1440px 桌面切換金門約 0.194 秒（不含外部底圖）；390px 模擬觸控選連江成功，無整頁水平溢出。阻擋外部底圖時兩份表格仍可查，無頁面例外。CARTO 樣式與圖磚請求回應 200；截圖與 browser-results.json 留於 data/private。
 - 模擬手機不等於實體手機；目前沒有實機與雲端正式網址驗收，不將兩者勾選完成。
 - 已修正文檔中 live／網頁尚未實作的舊描述，新增 DEPLOYMENT.md；目標分支為 feat/weather-reliability，雲端部署仍待使用者登入授權與設定 secrets。
+- 已透過 GitHub 連線同步功能分支，提交 `b524f1e`，建立 [PR #5](https://github.com/bogerneal/mysoul/pull/5)。[雲端 CI](https://github.com/bogerneal/mysoul/actions/runs/37351636933) 已完成且成功；尚未合併 main。
+- 使用者協助事項：登入 Streamlit Community Cloud，選 `bogerneal/mysoul`、`feat/weather-reliability`、`app.py`，在 Advanced settings 選 Python 3.14 並設定 `CWA_API_KEY`／`WEATHER_AUTO_REFRESH="true"`，部署後提供公開網址以便實測。現有工具沒有 Streamlit 帳號登入與部署權限，不能將 GitHub CI 成功視為網站已上線。
 
 ## 2026-10-06：完整儲存庫讀取與進度查核
 

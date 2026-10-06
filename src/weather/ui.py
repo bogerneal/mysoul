@@ -116,7 +116,7 @@ def main():
     configure_update_logging()
     st.set_page_config(page_title="台灣氣象 · mysoul", page_icon="🌤️", layout="wide")
     section = st.segmented_control(
-        "功能", ["未來預報", "即時觀測"], default="未來預報", key="section"
+        "功能", ["即時觀測", "未來預報"], default="即時觀測", key="section"
     )
     if section == "即時觀測":
         from weather.observation_ui import observation_page

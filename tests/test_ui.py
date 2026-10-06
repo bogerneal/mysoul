@@ -20,7 +20,9 @@ def dashboard(tmp_path, monkeypatch):
     monkeypatch.setenv("WEATHER_DB", str(tmp_path / "weather.sqlite3"))
     monkeypatch.setattr(ui, "api_key", lambda: "")
     monkeypatch.setattr(ui, "current_time", lambda: datetime(2026, 10, 5, tzinfo=UTC))
-    return AppTest.from_file(str(APP), default_timeout=20)
+    app = AppTest.from_file(str(APP), default_timeout=20)
+    app.session_state.section = "未來預報"
+    return app
 
 
 def test_empty_live_and_explicit_demo_flow(dashboard):

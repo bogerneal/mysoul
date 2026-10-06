@@ -125,7 +125,7 @@ def test_observation_ui_layers_and_forecast_isolation(tmp_path, monkeypatch, doc
         s["ObsTime"]["DateTime"] = datetime.now(UTC).isoformat()
     ObservationStore(tmp_path / "weather_observations.sqlite3").update("test")
     app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=30).run()
-    app.button_group(key="section").set_value("即時觀測").run()
+    assert app.button_group(key="section").value == "即時觀測"
     assert not app.exception
     assert len(app.metric) == 4
     for layer in ["當日累積雨量", "風速風向", "濕度", "氣溫"]:

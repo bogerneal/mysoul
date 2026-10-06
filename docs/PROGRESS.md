@@ -127,10 +127,10 @@
 
 ## 使用者需要做的事
 
-本機已有真實資料，目前不需要額外設定，直接執行以下指令查看成果：
+本機已有真實資料，查詢不需額外設定。公開部署需要使用者登入 Streamlit 並設定雲端 Secrets，詳見本文件最新紀錄及 DEPLOYMENT.md。本機查看指令：
 
 ```powershell
-cd C:\Users\USER\Downloads\mysoul
+cd C:\Users\user\Downloads\Fix\mysoul
 uv run --locked weather-data status --mode live --summary --location 臺北市
 ```
 
@@ -140,13 +140,13 @@ uv run --locked weather-data status --mode live --summary --location 臺北市
 2. 在本機 PowerShell 執行：
 
 ```powershell
-cd C:\Users\USER\Downloads\mysoul
+cd C:\Users\user\Downloads\Fix\mysoul
 uv run --locked weather-data capture-cwa --prompt-key
 ```
 
 3. 依提示輸入授權碼；成功顯示 `captured_unverified` 後，告知開發者「已擷取」。若失敗，只需提供錯誤代碼。
 
-完整說明見 [LOCAL_SETUP.md](LOCAL_SETUP.md)。目前無需雲端帳號、網站部署或額外資料庫設定。
+本機說明見 [LOCAL_SETUP.md](LOCAL_SETUP.md)；雲端帳號、部署與資料復原見 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 ## 下一步
 

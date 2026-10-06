@@ -46,6 +46,12 @@ def retry_delay(header: str | None, attempt: int) -> float:
 
 
 def fetch_weekly(api_key: str, *, session=None, sleep=time.sleep) -> dict:
+    return fetch_dataset(api_key, "F-D0047-091", session=session, sleep=sleep)
+
+
+def fetch_dataset(api_key: str, dataset: str, *, session=None, sleep=time.sleep) -> dict:
+    if dataset not in {"F-D0047-091", "O-A0003-001"}:
+        raise CwaError("unsupported_dataset")
     if not api_key.strip():
         raise CwaError("api_key_required")
     owned = session is None
@@ -58,7 +64,7 @@ def fetch_weekly(api_key: str, *, session=None, sleep=time.sleep) -> dict:
             delay = float(2**attempt)
             try:
                 response = session.get(
-                    ENDPOINT,
+                    ENDPOINT.rsplit("/", 1)[0] + "/" + dataset,
                     params={"Authorization": api_key, "format": "JSON"},
                     timeout=(5, 20),
                     allow_redirects=False,

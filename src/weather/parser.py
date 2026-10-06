@@ -100,8 +100,8 @@ def _series(element: dict, value_key: str) -> dict[tuple[datetime, datetime], fl
 def parse_demo_forecast(document: object, *, fetched_at: datetime) -> ForecastSnapshot:
     """Validate v1 synthetic data and align min/max by location and UTC interval.
 
-    Live CWA responses are intentionally rejected: a verified live adapter will
-    be introduced only after a real response and missing-value rules are checked.
+    Live CWA responses are intentionally rejected here; use parse_live_forecast
+    for the separately versioned live contract.
     """
     doc = _object(document)
     if doc.get("schema_version") != SCHEMA_VERSION:

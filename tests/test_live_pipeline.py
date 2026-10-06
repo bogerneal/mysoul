@@ -65,9 +65,30 @@ def clock(monkeypatch):
     return mocked
 
 
-def test_real_sample_matches_all_source_values(real_document):
+@pytest.mark.parametrize(
+    "filename,count,start,end",
+    [
+        ("cwa_weekly_20261004.json", 308, "2026-10-04T04:00:00+00:00", "2026-10-10T22:00:00+00:00"),
+        (
+            "cwa_weekly_20261004_evening.json",
+            330,
+            "2026-10-04T10:00:00+00:00",
+            "2026-10-11T22:00:00+00:00",
+        ),
+        (
+            "cwa_weekly_20261006_early.json",
+            330,
+            "2026-10-05T16:00:00+00:00",
+            "2026-10-12T22:00:00+00:00",
+        ),
+    ],
+)
+def test_real_sample_matches_all_source_values(filename, count, start, end):
+    real_document = json.loads(
+        (Path(__file__).parent / "fixtures" / filename).read_text(encoding="utf-8")
+    )
     data = parse_live_forecast(real_document, fetched_at=CAPTURED)
-    assert len(data.periods) == 308
+    assert len(data.periods) == count
     assert {p.location_code for p in data.periods} == set(COUNTIES)
     assert data.source_issued_at is None
     assert data.mode == "live"
@@ -86,8 +107,8 @@ def test_real_sample_matches_all_source_values(real_document):
                     )
                 ]
                 assert getattr(record, attribute) == float(row["ElementValue"][0][key])
-    assert min(p.start_at for p in data.periods) == datetime(2026, 10, 4, 4, tzinfo=UTC)
-    assert max(p.end_at for p in data.periods) == datetime(2026, 10, 10, 22, tzinfo=UTC)
+    assert min(p.start_at for p in data.periods) == datetime.fromisoformat(start)
+    assert max(p.end_at for p in data.periods) == datetime.fromisoformat(end)
 
 
 def test_reordering_and_unrelated_factors_do_not_change_result(real_document):

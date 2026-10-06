@@ -16,9 +16,11 @@ from weather.forecast_service import import_live, update_demo, update_live
 from weather.parser import DATASET_ID, ContractError, _timestamp
 from weather.presentation import summarize
 from weather.repository import ForecastRepository, RepositoryError
+from weather.update_log import configure_update_logging
 
 
 def main(argv=None) -> int:
+    configure_update_logging()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Weather storage and CWA contract capture")

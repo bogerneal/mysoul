@@ -1,6 +1,70 @@
 # 專案開發進度
 
-最後更新：2026-10-05（Asia/Taipei）
+最後更新：2026-10-06（Asia/Taipei）
+
+## 2026-10-06：預設入口改為即時觀測
+
+- 新工作階段預設選中「即時觀測」，並將它排在功能切換第一項；使用者仍可切換「未來預報」，同一工作階段保留選擇。
+- 調整既有預報測試的起始模式，既有觀測介面測試直接驗證首次進入即時觀測；154 項 pytest、Ruff lint／format 全部通過。
+- 此變更與黑色主題一併在部署分支提供。公開網站若仍顯示舊版，需要管理端 Reboot，再以新分頁／新工作階段驗證預設頁；本機測試不等同公開網站已更新。
+
+## 2026-10-06：黑色背景主題
+
+- 依使用者要求改用 Streamlit 原生 dark 主題：主背景 #000000、側欄／控制項 #111111、文字 #f3f4f6、主色 #22b8cf，涵蓋預報與即時觀測。
+- 本機 Edge 1440px 與 390px 模擬手機確認背景與文字顏色、兩模式無頁面例外，手機無整頁水平溢出；截圖在 data/private/black-*.png。僅改主題設定，不新增測試或重跑資料管線測試。
+- 已同步部署分支 `feat/weather-reliability`，設定提交 `7dda93d`。公開頁實測仍為舊淺色背景（rgb 246,248,251），尚未載入新主題；需要使用者由 Streamlit 管理頁 Reboot，完成後再驗證公開畫面。無須修改 Secrets。
+
+## 2026-10-06：圖片前三項功能實作與本機驗收
+
+- 使用者完成 Reboot 後，新版公開網站已驗收：即時觀測入口可用，20:50 自動取得 363 站，20:30 觀測資料／四圖層／金門篩選／測站表格正常；390px 模擬手機無整頁溢出與頁面例外。初次 OSM 圖磚載入需要等待，等待完成後實際截圖確認深色底圖、縣市界線與數字標籤可見，並非只有 HTTP 200。證據：`data/private/cloud-observation-results.json`、`cloud-observation-settled.png`。
+- 新功能公開部署已確認，前述舊版阻礙解除；管理端實際 SHA、完整磁碟重建／版本回復／私有日誌及實體手機仍不宣稱已驗收。
+- 功能已同步 `feat/weather-reliability`，提交 `2be2f00`；[PR #5](https://github.com/bogerneal/mysoul/pull/5) 已更新。[GitHub CI](https://github.com/bogerneal/mysoul/actions/runs/37465009305) Python 3.12／3.13／3.14 全部通過。
+- 最後補驗：瀏覽器實際點選金門（東）C2W030 圓點，測站明細選單成功同步；關閉底圖後仍保留兩張表格。
+- 初次部署後公開網站仍是舊版（沒有即時觀測入口），曾提醒使用者至 Streamlit 管理頁 Reboot 並核對分支 `feat/weather-reliability`。使用者已完成重啟，後續通過結果見上方；工具仍未取得管理帳號登入。
+- 使用者授權底圖與界線／標籤、独立即時觀測、測站明細／全台統計／雨風濕度圖層。本次未擴充雷達、颱風、特報、定位或連續內插色彩場。
+- O-A0003-001 真實 API 成功，363 測站；20:29 透過正式 ObservationStore 更新保存，資料獨立於預報。兩站去識別化精簡測試樣本與官方欄位／特殊碼依據已記於 OBSERVATIONS.md，原始回應與 SQLite 未入 Git。
+- 已實作更新節流、失敗保留、過期排除、四種圖層、測站選單／地圖點選、全台四張統計卡及缺座標保留。統計是近一小時的有效測站最新值，不是當日歷史極值。
+- 底圖實際根因：CARTO 圖磚回 HTTP 200 但影像內容為 API KEY REQUIRED。改用 OSM raster 深色／街道；Pydeck 字串常值需 String 包装，修正界線寬度及文字字集後，界線、標籤和街道圖形可見。
+- 已確認 Edge 桌面 1440px、390px 模擬手機，四圖層切換無頁面例外、手機無整頁水平溢出。截圖與瀏覽器結果保存在 data/private/observation-*。密集標籤改為預設每縣市一個真實代表測站，可另開全部標籤。
+- 本機最終 154 項 pytest、Ruff lint／format、sdist／wheel 建置通過；含既有預報回歸、觀測欄位／缺值／座標／時效、失敗保留與節流、過期回應拒絕與代表測站標籤。GitHub 同步及 CI 結果見上方；不將本機結果視為雲端已更新。
+
+## 2026-10-06：公開網站上線與瀏覽器驗收
+
+- 地圖補充檢查：CARTO 樣式、sprite 與圖磚請求為 HTTP 200，但 Edge 自動化截圖仍只呈現代表點、背景空白；不能據此宣稱地理底圖視覺驗收通過。查詢與表格正常，需進一步確認一般瀏覽器／實機是否同樣發生；截圖為 `data/private/cloud-map-settled.png`。
+- 使用者完成 Cloud 部署並提供公開網址：[台灣一週天氣 · mysoul](https://mysoul-9hyuk7z9oawbtdzjx2u3s4.streamlit.app/)。無需訪客登入即可讀取真實預報。
+- 線上顯示 CWA batch 1，資料取得與最後成功檢查為台灣時間 19:26；自動更新 30 分鐘提示生效，真實更新按鈕可用。未读取或回顯雲端 Secrets。
+- 實際確認全部 22 縣市可選，以及 10/06～10/12 共 7 個日期。金門切換約 0.341 秒，改至 10/12 後摘要、趨勢與時段表正常；當日不滿整天時正確標示部分時段。
+- Edge 154／1440px 桌面及 390px 模擬觸控：連江選取正常、無整頁水平溢出；關閉／阻擋 CARTO 底圖仍保留兩份表格，沒有 Streamlit 頁面例外。重新整理仍顯示 live 資料，未自動切換 Demo。
+- 首次前端元件下載有等待，載入完成後圖表與指標正常；自動化測試已配合 Cloud iframe 與選單動態載入，不將載入佔位當成程式失敗。
+- 截圖與 `cloud-results.json` 保存在 Git 忽略的 `data/private/`。本次沒有修改程式，沒有重跑本機 pytest；沿用程式版本 b524f1e 的 138 項測試及 Python 3.12～3.14 CI 成功證據。
+- 對應功能分支為 `feat/weather-reliability`，本次驗收前分支 HEAD 為 `ebdfdf8`；公開頁面不提供實際部署 SHA，管理頁版本仍需核對。PR #5 尚未合併 main。
+- 尚未完成：管理端 Reboot／磁碟重建／版本回復、私有雲端日誌查核、實體手機與官方溫度缺值依據。頁面重新整理不等於伺服器重啟，不將 M5 全部標為完成。
+
+## 2026-10-06：可靠性與部署版本準備
+
+- 真實 CWA 擷取成功，台灣時間 01:36，22 縣市、330 筆，涵蓋 10/06 00:00～10/13 06:00。原始回應與 SQLite 留在 Git 忽略路徑，無持久保存 Key。
+- 已加入 JSON 更新日誌、錯誤碼白名單、失敗狀態儲存保護；缺座標及地圖繪製失敗仍保留全部縣市表格。
+- 新增凌晨精簡 fixture，三份真實樣本逐筆核對；Windows／Python 3.14.3 與乾淨的 Python 3.12.13 環境各 138 項測試通過。
+- 加入選配 30 分鐘訪客觸發更新及空資料庫復原，已選定 Streamlit Community Cloud，部署文件已建立。
+- 官方 PDF 已重新下載核對，仍未找到溫度缺值定義；未知缺值維持拒絕整批更新。
+- 01:47 再以實際 update-live 更新成功，沿用 batch 1（330 筆），JSON 日誌記錄耗時約 280ms；真實服務驗證與離線測試分開記錄。
+- Edge 154／Intel Core i5-12400：1440px 桌面切換金門約 0.194 秒（不含外部底圖）；390px 模擬觸控選連江成功，無整頁水平溢出。阻擋外部底圖時兩份表格仍可查，無頁面例外。CARTO 樣式與圖磚請求回應 200；截圖與 browser-results.json 留於 data/private。
+- 模擬手機不等於實體手機；目前沒有實機與雲端正式網址驗收，不將兩者勾選完成。
+- 已修正文檔中 live／網頁尚未實作的舊描述，新增 DEPLOYMENT.md；目標分支為 feat/weather-reliability，雲端部署仍待使用者登入授權與設定 secrets。
+- 已透過 GitHub 連線同步功能分支，提交 `b524f1e`，建立 [PR #5](https://github.com/bogerneal/mysoul/pull/5)。[雲端 CI](https://github.com/bogerneal/mysoul/actions/runs/37351636933) 已完成且成功；尚未合併 main。
+- 使用者協助事項：登入 Streamlit Community Cloud，選 `bogerneal/mysoul`、`feat/weather-reliability`、`app.py`，在 Advanced settings 選 Python 3.14 並設定 `CWA_API_KEY`／`WEATHER_AUTO_REFRESH="true"`，部署後提供公開網址以便實測。現有工具沒有 Streamlit 帳號登入與部署權限，不能將 GitHub CI 成功視為網站已上線。
+
+## 2026-10-06：完整儲存庫讀取與進度查核
+
+- 從 GitHub 複製 `main`，查核版本 `f4af2f800e390505451dfe49adf1039d28bb6de8`。本次工作目錄為 `C:\Users\user\Downloads\Fix\mysoul`；下方舊路徑與既有資料庫描述屬先前工作紀錄，不代表新副本已有 live 資料庫。
+- 遞迴讀取此版本全部 51 個 Git 追蹤檔案，包含隱藏設定、10 份 docs 文件、程式、測試、全部 JSON 與 `uv.lock`；全部可用 UTF-8 解碼，無二進位檔案或子模組。讀取範圍不含其他分支歷史版本、Git 內部物件及未上傳的私有檔案。
+- 大型資料完整解析：兩份真實 fixture 各含 22 縣市，分別為 308／330 筆配對時段；鎖定檔含 45 個套件記錄（含本專案）。逐檔讀取清單與 SHA-256 留在工作區上層 `mysoul-read-manifest.json`。
+- 本次實際驗證：`uv sync --locked` 成功；Windows／Python 3.14.3 下 pytest 116 項通過、Ruff lint 與 format 通過、sdist／wheel 建置成功。測試為固定樣本及 HTTP mock，未請求真實 CWA、未重新進行瀏覽器或公開部署驗收。
+- 目前實作確認：真實／Demo 隔離、SQLite 快照與失敗保留、查詢介面、日期彙整、代表點地圖已存在。M1 官方溫度缺值語意、M2 結構化批次日誌、M4 異常情境驗收、M5 部署仍待完成。
+- 發現文件落差：`LIVE_CONTRACT.md`、`LOCAL_SETUP.md`、`REFERENCES.md`、`UML.md` 部分段落仍稱 live 或網頁未實作；`ARCHITECTURE.md` 混合目標設計與現況。後續應同步修正文案，不能以舊段落判斷實作進度。
+- 發現地圖驗收缺口：`ui.draw_map` 遇個別縣市缺座標會略過，只有全部無可畫資料才顯示提示；同日地圖表格也僅取有座標的列。尚未滿足 FR-07 的個別缺座標警示與資料保留要求，本次未修改功能。
+- 建議下一步：先修正文案與現況差異，再補 M1 缺值依據／更多發布批次、M2 安全批次耗時日誌及 M4 缺座標／底圖失效驗收，最後進行 M5 部署與重啟復原驗證。
+- 同步狀態：本次僅本機進度文件變更，尚未提交或推送；里程碑驗收標準未變，PLAN 不調整。檢視 Demo 不需 Key；新副本取得最新真實預報仍需 CWA 授權碼。
 
 ## 2026-10-05：參考網站功能差異盤點
 
@@ -25,24 +89,24 @@
 
 ## 目前位置
 
-本機真實 CWA → 解析 → SQLite → Streamlit 查詢已接通，既有真實資料包含 22 縣市、330 筆時段。M3 介面完成，M4 基本地圖完成；M1 缺值語意、M2 結構化日誌、M4 完整異常驗收及 M5 公開部署仍待補齊。
+本機與公開 Cloud 網站的真實 CWA → 解析 → SQLite → Streamlit 查詢已接通。M2 結構化日誌、M3 介面、M4 缺座標與繪製失敗降級、公開網站桌面／模擬手機查詢已驗證；M1 官方缺值語意、M4 實體觸控及 M5 管理端復原驗收仍待補齊。
 
-本機目錄：`C:\Users\USER\Downloads\mysoul`
+本機目錄：`C:\Users\user\Downloads\Fix\mysoul`
 
-目前分支：`main`；本次功能分支：`feat/weather-dashboard`。
+目前功能分支：`feat/weather-reliability`，基於 `main` 的 `f4af2f8`。
 
-同步狀態：真實管線（PR #3）與本次 Streamlit 網頁（PR #4）均已合併至 GitHub `main`。本機同步追蹤 `origin/main`；API Key、SQLite、私有原始樣本及瀏覽器截圖維持 Git 忽略。
+既有真實管線（PR #3）與 Streamlit 網頁（PR #4）已在 GitHub `main`；本次可靠性與部署修改在獨立功能分支，公開網站已上線，PR #5 尚未合併。雲端 Key 由使用者設定於 Secrets；本機不持久保存 Key，SQLite、私有原始樣本及瀏覽器截圖維持 Git 忽略。
 
 ## 里程碑
 
 | 階段 | 狀態 | 尚缺項目 |
 | --- | --- | --- |
 | M0 規畫 | 文件初稿完成 | 隨實作修訂 |
-| M1 資料契約 | 兩份真實樣本解析、22 縣市與時段驗證完成 | 官方溫度缺值語意、更多發布批次 |
-| M2 資料管線 | 真實更新／儲存／查詢、網頁冷卻與更新狀態完成 | 結構化批次耗時日誌、多程序更新協調 |
+| M1 資料契約 | 三份真實樣本逐值驗證、22 縣市與時段完整 | 官方溫度缺值语意、更多發布批次 |
+| M2 資料管線 | 真實更新／儲存／查詢、冷卻、JSON 日誌與單程序協調完成 | 多程序為未支援範圍 |
 | M3 查詢介面 | 本機實作與自動化測試完成 | 持續使用回饋 |
-| M4 互動地圖 | 代表點、圖例、點選連動、桌面與窄螢幕檢查完成 | 缺座標／網路異常與觸控裝置完整驗收 |
-| M5 發布維運 | 待開發；CI 基礎已有 | 部署、重啟復原及完整產品驗收 |
+| M4 互動地圖 | 代表點、缺座標保留、底圖阻擋與模擬觸控驗證完成 | 實體觸控裝置驗收、正式營運授權條件確認 |
+| M5 發布維運 | Cloud 公開網站上線，真實資料、桌面與模擬手機查詢通過 | 管理端重啟、磁碟重建、版本回復與日誌驗收 |
 
 ## 已完成與驗證
 
@@ -101,10 +165,10 @@
 
 ## 使用者需要做的事
 
-本機已有真實資料，目前不需要額外設定，直接執行以下指令查看成果：
+公開網站已可直接使用，不需要訪客填 Key。下一階段需要管理者協助進行 Cloud Reboot／日誌查核，以及實體手機操作確認。本機查看指令：
 
 ```powershell
-cd C:\Users\USER\Downloads\mysoul
+cd C:\Users\user\Downloads\Fix\mysoul
 uv run --locked weather-data status --mode live --summary --location 臺北市
 ```
 
@@ -114,19 +178,19 @@ uv run --locked weather-data status --mode live --summary --location 臺北市
 2. 在本機 PowerShell 執行：
 
 ```powershell
-cd C:\Users\USER\Downloads\mysoul
+cd C:\Users\user\Downloads\Fix\mysoul
 uv run --locked weather-data capture-cwa --prompt-key
 ```
 
 3. 依提示輸入授權碼；成功顯示 `captured_unverified` 後，告知開發者「已擷取」。若失敗，只需提供錯誤代碼。
 
-完整說明見 [LOCAL_SETUP.md](LOCAL_SETUP.md)。目前無需雲端帳號、網站部署或額外資料庫設定。
+本機說明見 [LOCAL_SETUP.md](LOCAL_SETUP.md)；雲端帳號、部署與資料復原見 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 ## 下一步
 
-1. 核對官方溫度缺值語意，持續驗證不同發布批次。
-2. 補 M2 安全批次耗時日誌及 M4 地圖異常情境驗收。
-3. 規畫 M5 部署，決定公開示範方式與資料保存，再設定雲端 secrets。
+1. 在管理頁核對部署版本，安排 Cloud Reboot／空資料庫復原與日誌驗收。
+2. 完成實體手機操作確認；功能分支合併後再將部署分支切到 main。
+3. 取得 CWA 官方溫度缺值定義或真實缺值樣本，繼續補契約依據；目前維持拒絕未知缺值。
 
 ## 2026-10-04：本機真實資料管線完成
 

@@ -20,7 +20,8 @@ def main(argv: list[str] | None = None) -> int:
         settings = Settings.from_env()
         if settings.mode != "demo":
             raise ConfigurationError(
-                "Live integration is not implemented; select WEATHER_MODE=demo"
+                "weather-demo requires WEATHER_MODE=demo; "
+                "use weather-data update-live for live data"
             )
         document = (
             json.loads(args.fixture.read_text(encoding="utf-8"))

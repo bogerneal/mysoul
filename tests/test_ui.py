@@ -20,7 +20,9 @@ def dashboard(tmp_path, monkeypatch):
     monkeypatch.setenv("WEATHER_DB", str(tmp_path / "weather.sqlite3"))
     monkeypatch.setattr(ui, "api_key", lambda: "")
     monkeypatch.setattr(ui, "current_time", lambda: datetime(2026, 10, 5, tzinfo=UTC))
-    return AppTest.from_file(str(APP), default_timeout=20)
+    app = AppTest.from_file(str(APP), default_timeout=20)
+    app.session_state.section = "未來預報"
+    return app
 
 
 def test_empty_live_and_explicit_demo_flow(dashboard):
@@ -113,3 +115,41 @@ def test_expired_live_has_no_fake_future_dates(dashboard, monkeypatch, tmp_path)
     assert len(app.selectbox) == 1
     assert not app.metric
     assert any("沒有今天起" in w.value for w in app.warning)
+
+
+@pytest.mark.parametrize("all_missing", [False, True])
+def test_missing_coordinates_keep_county_rows(dashboard, monkeypatch, tmp_path, all_missing):
+    update_demo(ForecastRepository(tmp_path / "weather.sqlite3"), load_demo_document())
+    points = [] if all_missing else [p for p in ui.load_points() if p["name"] != "臺北市"]
+    monkeypatch.setattr(ui, "load_points", lambda: points)
+    app = dashboard.run()
+    app.radio[0].set_value("Demo 示範").run()
+    assert not app.exception
+    assert any("缺少有效座標" in w.value and "臺北市" in w.value for w in app.warning)
+    assert set(app.dataframe[-1].value["縣市"]) == {"臺北市", "高雄市"}
+    assert len(app.selectbox(key="city").options) == 2
+
+
+def test_map_render_failure_keeps_all_tables(dashboard, monkeypatch, tmp_path):
+    update_demo(ForecastRepository(tmp_path / "weather.sqlite3"), load_demo_document())
+
+    def fail(*args):
+        raise RuntimeError("private renderer detail")
+
+    monkeypatch.setattr(ui, "render_map", fail)
+    app = dashboard.run()
+    app.radio[0].set_value("Demo 示範").run()
+    assert not app.exception
+    assert any("地圖暫時無法顯示" in w.value for w in app.warning)
+    assert all("private" not in w.value for w in app.warning)
+    assert set(app.dataframe[-1].value["縣市"]) == {"臺北市", "高雄市"}
+
+
+def test_basemap_off_preserves_queries(dashboard, tmp_path):
+    update_demo(ForecastRepository(tmp_path / "weather.sqlite3"), load_demo_document())
+    app = dashboard.run()
+    app.radio[0].set_value("Demo 示範").run()
+    app.checkbox[0].uncheck().run()
+    assert not app.exception
+    assert len(app.metric) == 3
+    assert len(app.dataframe[-1].value) == 2
